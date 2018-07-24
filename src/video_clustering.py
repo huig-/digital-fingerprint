@@ -10,7 +10,7 @@ import json
 
 import time
 
-CROP_X=CROP_Y=1024
+CROP_X=CROP_Y=512
 
 def extract_noise_frame(frame, color=False):
     cropped_frame = cropCenter(frame, CROP_X, CROP_Y)
@@ -27,6 +27,15 @@ def extract_noise_frame(frame, color=False):
         noise = cropped_frame - 255 * denoise_wavelet(cropped_frame, wavelet='db8', mode='soft', wavelet_levels=4, multichannel=False)
     return noise 
 
+def extract_gprnu_frame(frame):
+    cropped_frame = cropCenter(frame, CROP_X, CROP_Y)
+    #cropped_frame = cv2.resize(frame, (512,512), interpolation=cv2.INTER_LINEAR)
+    if cropped_frame is None:
+        print("Less than", CROP_X, "x", CROP_Y)
+        return None
+    cropped_frame = cropped_frame[:,:,1]
+    noise = cropped_frame - 255 * denoise_wavelet(cropped_frame, wavelet='db8', mode='soft', wavelet_levels=4, multichannel=False)
+    return noise 
 
 def correlation_between_frames(vid, indexes=None):
     frames = cv2.VideoCapture(vid)
@@ -49,7 +58,7 @@ def correlation_between_frames(vid, indexes=None):
             if flag:
                 current_frame = int(frames.get(cv2.CAP_PROP_POS_FRAMES)) - 1
                 if current_frame in indexes:
-                    noise = extract_noise_frame(frame).flatten()
+                    noise = extract_gprnu_frame(frame).flatten()
                     noise_matrix[cnt , :] = noise
                     cnt += 1
             else:
@@ -85,17 +94,16 @@ def plot_matrix(corr_matrix):
     mask = np.zeros_like(corr_matrix)
     mask[np.triu_indices_from(mask)] = True
     with sns.axes_style("white"):
-        sns.heatmap(corr_matrix, mask=mask, linewidths=.5, cmap="YlGnBu")
+        sns.heatmap(corr_matrix, mask=mask, linewidths=.5)#, cmap="YlGnBu")
         #sns.heatmap(corr_matrix, annot=True, mask=mask, fmt='.1g', annot_kws={"size": 7.5}, linewidths=.5, cmap="YlGnBu")
     plt.show()
 
 
 if __name__ == "__main__":
-    path = "/Users/Gago/Desktop/Universidad/Master/TFM/Dataset/Video/iphone7_roberto/"
-    vid = "IMG_5680.mov"
+    path = "/Users/Gago/Desktop/Universidad/Master/TFM/Dataset/Video/samsung_g6/"
+    vid = "20160203_161240.mp4"
     path += vid
     ids = find_iframes(path)
     print(ids)
-    ids = None
     corr_matrix = correlation_between_frames(path, ids)
     plot_matrix(corr_matrix)
