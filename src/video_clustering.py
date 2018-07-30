@@ -1,16 +1,20 @@
 import cv2
+from PIL import Image
+import imagehash
+
 import os
 import numpy as np
 from skimage.restoration import denoise_wavelet
 import matplotlib.pyplot as plt
 from matplotlib import cm as cm
 from utils import cropCenter
+from image_clustering import cluster_noise_job
 import seaborn as sns
 import json
 
 import time
 
-CROP_X=CROP_Y=512
+CROP_X=CROP_Y=710
 
 def extract_noise_frame(frame, color=False):
     cropped_frame = cropCenter(frame, CROP_X, CROP_Y)
@@ -37,7 +41,7 @@ def extract_gprnu_frame(frame):
     noise = cropped_frame - 255 * denoise_wavelet(cropped_frame, wavelet='db8', mode='soft', wavelet_levels=4, multichannel=False)
     return noise 
 
-def correlation_between_frames(vid, indexes=None):
+def extract_noise_frames(vid, indexes=None, key_frames=False): #key_frames uses phash
     frames = cv2.VideoCapture(vid)
     noise_matrix = None
     if indexes is None:
@@ -53,20 +57,52 @@ def correlation_between_frames(vid, indexes=None):
     else:
         noise_matrix = np.empty(shape=(len(indexes), CROP_X*CROP_Y))
         cnt = 0
+        if key_frames:
+            kf_cnt = 0
+            hashes = []
         while frames.isOpened():
             flag, frame = frames.read()
             if flag:
                 current_frame = int(frames.get(cv2.CAP_PROP_POS_FRAMES)) - 1
                 if current_frame in indexes:
-                    noise = extract_gprnu_frame(frame).flatten()
+                    if key_frames:
+                        hashes.append(imagehash.average_hash(Image.fromarray(frame)))   
+                    noise = extract_noise_frame(frame).flatten()
                     noise_matrix[cnt , :] = noise
                     cnt += 1
             else:
                 break
 
+    if key_frames:
+        n = len(indexes)
+        print("len", len(hashes))
+        similarities = np.empty(shape=(n,n))
+        for i in range(n-1):
+            for j in range(i+1, n):
+                similarities[i,j] = hashes[i] - hashes[j]
+        inds = np.triu_indices(n, 1)
+        above_avg = similarities[inds] > np.mean(similarities[inds])
+        print("above_avg", above_avg)
+        aux = list(zip(inds[0], inds[1], above_avg))
+        #real_inds = [(i,j) for (i,j,b) in aux if b]
+        ##Get best
+        m = np.mean(similarities[inds])
+        i, j = [max(abs(similarities[inds]))]
+
+        real_inds_unq = np.unique([x for t in real_inds for x in t]) 
+        print("inds: ", real_inds_unq)
+        #print("original noise_matr: ", noise_matrix[:, :2])
+        print("shape1", noise_matrix.shape)
+        noise_matrix = noise_matrix[real_inds_unq, :]
+        print("shape2", noise_matrix.shape)
+        #print("final noise_matr: ", noise_matrix[:, :2])
+
     frames.release()
     cv2.destroyAllWindows()
-    return np.corrcoef(noise_matrix)
+    return noise_matrix
+
+def extract_noise_vid(vid, indexes):
+    return np.mean(extract_noise_frames(vid, indexes), axis=0)
 
 def correlation_between_captures(path):
     vids = os.listdir(path)
@@ -86,7 +122,7 @@ def find_iframes(cap_path):
     os.system("ffprobe -print_format json -loglevel panic -show_frames -select_streams v {0} > {1}".format(cap_path, new_file))
     with open(new_file) as f:
         j_f = json.load(f)
-        i_frames = [x['coded_picture_number'] for x in j_f['frames'] if x['pict_type'] == "I"]
+        i_frames = [n for n, x in enumerate(j_f['frames']) if x['pict_type'] == "I"]
     os.remove(new_file)
     return i_frames
 
@@ -100,10 +136,22 @@ def plot_matrix(corr_matrix):
 
 
 if __name__ == "__main__":
-    path = "/Users/Gago/Desktop/Universidad/Master/TFM/Dataset/Video/samsung_g6/"
-    vid = "20160203_161240.mp4"
-    path += vid
+    """
+    path = "/Users/Gago/Desktop/Universidad/Master/TFM/pruebas/"
+    with open("cluster.info") as f:
+        attempt = f.readlines()[0].strip()
+    print("attempt: ", attempt)
+    cluster_path = path + attempt
+    video_path = cluster_path + '/vids'
+    noise_path = cluster_path + '/noise'
+    print('Extracting noise from vids..')
+    files = [f for f in os.listdir(video_path) if os.path.isfile(os.path.join(video_path, f))]
+    for f in files:
+        iframes = find_iframes(os.path.join(video_path, f))
+        np.save(os.path.join(noise_path, f), extract_noise_vid(os.path.join(video_path, f), iframes)) 
+    print("Clustering")
+    cluster_noise_job(cluster_path)
+    """
+    path = "/Users/Gago/Desktop/Universidad/Master/TFM/Dataset/Video/iphone_8plus/IMG_0545.MOV"
     ids = find_iframes(path)
-    print(ids)
-    corr_matrix = correlation_between_frames(path, ids)
-    plot_matrix(corr_matrix)
+    extract_noise_frames(path, ids, True)
