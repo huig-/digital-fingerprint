@@ -72,7 +72,7 @@ def extract_noise_frames(vid, indexes=None, key_frames=False): #key_frames uses 
                     cnt += 1
             else:
                 break
-
+    """
     if key_frames:
         n = len(indexes)
         print("len", len(hashes))
@@ -80,22 +80,26 @@ def extract_noise_frames(vid, indexes=None, key_frames=False): #key_frames uses 
         for i in range(n-1):
             for j in range(i+1, n):
                 similarities[i,j] = hashes[i] - hashes[j]
-        inds = np.triu_indices(n, 1)
-        above_avg = similarities[inds] > np.mean(similarities[inds])
-        print("above_avg", above_avg)
-        aux = list(zip(inds[0], inds[1], above_avg))
-        #real_inds = [(i,j) for (i,j,b) in aux if b]
+        x, y = np.triu_indices(n, 1)
+        f_sim = [(i,j, similarities[i,j]) for i,j in list(zip(x,y))]
         ##Get best
-        m = np.mean(similarities[inds])
-        i, j = [max(abs(similarities[inds]))]
+        m = np.mean(similarities[x,y])
+        real_inds = [0]
+        f_sim = [(i,j,k) for (i,j,k) in f_sim if ((i == 0 and k > m) or i!=0)]
+        for _ in range(n):
+            d = [(val,j) for (i,j,val) in f_sim if i in real_inds and j not in real_inds] + [(val,i) for (i,j,val) in f_sim if i not in real_inds and j in real_inds]
+            if len(d) == 0:
+                break
+            val, j = max(d)
+            if val < m:
+                break
+            real_inds.append(j)
+            f_sim = [(i0,j0,k) for (i0,j0,k) in f_sim if (((i0 == j or j0 == j) and k > m) or (i0 != j and j0 !=j))]
 
-        real_inds_unq = np.unique([x for t in real_inds for x in t]) 
-        print("inds: ", real_inds_unq)
-        #print("original noise_matr: ", noise_matrix[:, :2])
-        print("shape1", noise_matrix.shape)
-        noise_matrix = noise_matrix[real_inds_unq, :]
-        print("shape2", noise_matrix.shape)
-        #print("final noise_matr: ", noise_matrix[:, :2])
+        noise_matrix = noise_matrix[real_inds, :]
+        print("real_inds", real_inds)
+        print("len", len(real_inds))
+    """
 
     frames.release()
     cv2.destroyAllWindows()
@@ -136,7 +140,6 @@ def plot_matrix(corr_matrix):
 
 
 if __name__ == "__main__":
-    """
     path = "/Users/Gago/Desktop/Universidad/Master/TFM/pruebas/"
     with open("cluster.info") as f:
         attempt = f.readlines()[0].strip()
@@ -149,9 +152,11 @@ if __name__ == "__main__":
     for f in files:
         iframes = find_iframes(os.path.join(video_path, f))
         np.save(os.path.join(noise_path, f), extract_noise_vid(os.path.join(video_path, f), iframes)) 
-    print("Clustering")
-    cluster_noise_job(cluster_path)
+    #print("Clustering")
+    #cluster_noise_job(cluster_path)
     """
     path = "/Users/Gago/Desktop/Universidad/Master/TFM/Dataset/Video/iphone_8plus/IMG_0545.MOV"
     ids = find_iframes(path)
+    print("inds", ids)
     extract_noise_frames(path, ids, True)
+    """
