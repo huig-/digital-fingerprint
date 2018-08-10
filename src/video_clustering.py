@@ -14,7 +14,7 @@ import json
 
 import time
 
-CROP_X=CROP_Y=710
+CROP_X=CROP_Y=700
 
 def extract_noise_frame(frame, color=False):
     cropped_frame = cropCenter(frame, CROP_X, CROP_Y)

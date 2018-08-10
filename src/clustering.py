@@ -28,6 +28,23 @@ def generate_correlation_file(noise_path, results_path):
     f.write(filenames)
     f.close()
 
+def generate_mahalanobis(noise_path, results_path):
+    dirlist = sorted(os.listdir(noise_path))
+    nfiles = len(dirlist)
+    r = np.empty(shape=(nfiles, 700*700))
+    for i in range(nfiles):
+        noise = np.load(os.path.join(noise_path, dirlist[i]))
+        r[i,:] = noise
+    np.save(os.path.join(results_path, 'noises'), r)
+
+    n = r.shape[0]
+    dd = np.empty((n,n))
+    cov = np.linalg.inv(np.cov(r, rowvar=False))
+    for i in range(n):
+        for j in range(i+1, n):
+            dd[i,j] = mahalanobis(r[i,:], r[j,:], cov[i,j])
+    print(dd)
+
 def extract_clusters(Z, n):
     CT = cut_tree(Z, n_clusters=n, height=None).flatten()
     clusters = []
@@ -69,8 +86,6 @@ def minimum_sc(Z, r):
         if (sc_i < sc):
             sc = sc_i
             min_clusters = clusters
-    print("Nuestro", sc)
-    print("Nuestro: ", min_clusters)
     return min_clusters
 
 def cluster_noise(results_path, linkage_method):
@@ -82,20 +97,20 @@ def cluster_noise(results_path, linkage_method):
     disimilitude = 1 - r
     disimilitude = squareform(disimilitude)
     Z = linkage(disimilitude, method=linkage_method)
-    #Z[:, 2] = Z[:, 2]-Z[:, 2].min()
+    Z[:, 2] = Z[:, 2]-Z[:, 2].min()
     # Clusters are separated according to Caldelli's paper. This should be changed to allow more mmethods
-    clusters = minimum_sc(Z, r)
 
-    sss = np.inf
+    #clusters = minimum_sc(Z, r)
+
+    sss = -10
     sss_i = 0
     for i in range(2, Z.shape[0]+1):
         nodes = fcluster(Z, i, criterion="maxclust")
         si = silhouette_score(1-r, nodes, metric='euclidean')
-        if (si < sss):
+        if (si > sss):
             sss = si
             sss_i = i
-    print("sklearn", sss)
-    print("sklearn", extract_clusters(Z, sss_i)) 
+    clusters = extract_clusters(Z, sss_i)
 
     cluster_file = open(results_path + '/' + linkage_method + '/clusters.txt', 'w')
     for i in range(len(clusters)):
@@ -150,8 +165,10 @@ if __name__ == "__main__":
     results_path = os.path.join(initial_path, attempt, 'Results')
     if not os.path.isdir(results_path):
         os.makedirs(results_path)
+    #generate_mahalanobis(noise_path, results_path)
     generate_correlation_file(noise_path, results_path)
-    methods = ['single', 'complete', 'average', 'weighted', 'median', 'ward']
+    #methods = ['single', 'complete', 'average', 'weighted', 'ward']
+    methods = ['ward']
     for m in methods:
         print("method", m)
         if not os.path.isdir(os.path.join(results_path,m)):
