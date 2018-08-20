@@ -1,0 +1,55 @@
+En este capítulo se van a exponer una serie de ejemplos ilustrativos de ataques de denegación de servicio clasificados en función del nivel de capa TCP/IP. Además, se comentarán unos ataques que han tenido gran relevancia dentro de la ciberseguridad por su magnitud.
+
+\section{Nivel de red}
+Se aprovecha de vulnerabilidades en protocolos a nivel de red, como pueden ser TCP, UDP, ICMP y DNS. 
+
+\subsection{Inundación SYN}
+El protocolo TCP utiliza una establecimiento de conexión consistente en el \textit{Handshake}:
+\begin{enumerate}
+\item El cliente envía un paquete SYN al servidor.
+\item El servidor responde con SYN ACK y almacenará la información requerida en memoria.
+\item El cliente confirma su petición enviando un paquete ACK.
+\item El servidor comprueba en su pila de memoria si se encuentra tal conexión. 
+\item En caso de encontrarse la transferencia puede empezar.
+\end{enumerate}
+
+Durante las inundaciones SYN el atacante envía al servidor muchos paquetes SYN con direcciones falsas o inexistentes de forma que el servidor almacenará toda esta información, sin embargo no confirmará ninguna conexión con un paquete ACK. De esta forma el servidor quedará bloqueado con conexiones semiestablecidas que nunca llegarán a establecerse, impidiendo el acceso a usuarios legítimos\cite{synflood}.
+
+\subsection{Inundación NTP}
+Recientemente han aparecido este tipo de ataques (a partir del a\~no 2013) y suelen realizarse a páginas web de juegos y proveedores de servicios de Internet (ISP). La razón es que al igual que DNS, se basa en el protocolo UDP y se puede conseguir una respuesta de gran tama\~no con una peque\~na consulta. 
+NTP es el protocolo usado por máquinas conectadas a Internet para ajustar sus relojes y es usado por equipos de escritorio, servidores y también teléfonos móviles. Desafortunadamente, este simple protocolo basado en UDP es dado a la amplificación (y reflexión) pues responderá a un paquete con un dirección IP origen falsificada y porque al menos uno de sus comandos enviará una respuesta grande a una solicitud peque\~na, lo que le convierte en un medio para los ataques de denegación de servicio. 
+NTP contiene un comando conocido como \textit{monlist} (a veces MON\_GETLIST) que se envía a un servidor NTP con propósito de monitorización, el servidor enviará hasta 600 direcciones IP de las últimas máquinas que han interactuado con el servidor. El paquete de solicitud es de 234 bytes, mientras que las respuestas en el caso de haber 600 máquinas son de 48000 bytes, produciéndose un factor de amplificación de 206.
+Afortunadamente hay mejoras que permiten agregar seguridad a este protocolo, pero no todos los servidores las implementan\cite{ntp-cloudfare}.
+
+\section{Nivel de aplicación}
+Ante el uso masivo de páginas web a diario en todas partes del mundo, el protocolo HTTP es uno de los protocolos más propicios para camuflar un ataque y pasar desapercibido. Por esto es uno de los protocolos en los que más se buscan vulnerabilidades.
+
+\subsection{Ataques de inundación de sesión}
+La idea es iniciar muchas sesiones HTTP con un servidor y no permitir la conexión de los usuarios legítimos. Este ataque se distingue fácilmente al tener un \textit{session rate} muy elevado\cite{soa-dos}.
+
+\subsection{Ataques de inundación de peticiones}
+En este caso la idea se basa en realizar más peticiones que las que es capaz de atender el servidor. El ataque GET/POST \textit{flooding} (inundación) envía muchos request/post desde una botnet, saturando el servidor con peticiones que resolver. Una versión de este ataque es el single-session GET/POST flooding, que aprovecha que a partir de HTTP 1.1 pueden realizarse varias peticiones por sesión, lo que implica un session rate más bajo y evadir posibles mecanismos de defensa\cite{soa-dos}.
+
+\subsection{Ataques Request/Response lenta}
+Una forma de saturar el servidor y evitar que usuarios legítimos accedan a él es mantener todos los sockets disponibles por el servidor ocupados. Normalmente un servidor HTTP cierra una conexión en cuanto satisface la petición que recibe. Este tipo de ataques se caracterizan por ser más inteligentes e intentar mantener la conexión HTTP abierta el máximo tiempo posible y agotar el número de sockets disponibles. 
+
+\subsubsection{Slowloris\cite{soa-dos}}
+Slowloris se basa en enviar peticiones muy lentamente, para esto envía peticiones HTTP parciales, sin rellenar la cabecera (no envía el salto de línea que separa la cabecera y el cuerpo), de forma que el servidor se queda esperando los datos que finalicen la petición. El atacante enviará una cabecera ampliada intentando apurar al máximo los timers de finalización de sesión para mantener la conexión abierta el mayor tiempo posible.
+
+\subsubsection{Fragmentación HTTP\cite{soa-dos}}
+La idea es la misma que en el caso de Slowloris, pero en este ataque se fragmentan paquetes legítimos en múltiples partes y todas estas se envían lentamente. Al ser paquetes legítimos este ataque suele realizarse desde botnets.
+
+\subsubsection{Slowpost/RUDY\cite{soa-dos}}
+El ataque Slowpost o RUDY (R-U-Dead-Yet?) utiliza comandos \textit{post} en los que ha definido previamente en la cabecera del paquete HTTP la longitud que enviará en el cuerpo del paquete. Una vez se ha hecho esto, envía el cuerpo del mensaje con una tasa de 1B cada dos minutos. 
+
+\subsubsection{Slowreading\cite{soa-dos}}
+El ataque Slowreading, como su nombre indica, se basa en leer las respuestas del servidor lentamente. Para esto se aprovecha del protocolo TCP y al establecerse la conexión anuncia un tama\~no de ventana menor que el buffer de envío del servidor. De esta forma el protocolo TCP se mantiene alerta de un posible cambio de tama\~no de ventana para el cual tiene asociados unos timers. Aunque no exista comunicación HTTP, TCP mantendrá abierta la conexión en base a esos timers esperando poder enviar los datos.
+
+\section{Hitos en la historia de los ataques de denegación de servicio}
+\begin{itemize}
+\item El 7 de Febrero del a\~no 2000 un estudiante de 14 a\~nos (apodado MafiaBoy\cite{mafiaboy}) consiguió realizar con éxito ataques de denegación de servicio a Yahoo!, Fifa.com, Amazon.com, Dell, Inc., E*TRADE, eBay y CNN. Solamente lás pérdidas en Yahoo! se contabilizaron como 1.2 billones de dolares americanos.
+\item El 18 de Marzo del a\~no 2013 Spamhaus recibió un ataque de denegación de servicio de 10Gbps, que delegó en la empresa CloudFare. CloudFare pasó a recibir las peticiones dirigadas a Spamhaus y dejo el ataque para aprender de él pues no comprometía su red. Los atacantes dedicideron aumentar la fuerza del ataque llegando hasta los 300Gbps, siendo hasta el momento el ataque con más ancho de banda recibido hasta la fecha (que se tenga constancia)\cite{cloudfare}.
+\item El 15 de Enero de 2015 más de $19000$ páginas web francesas fueron atacadas como consecuencia de lo sucedido en la revista Charlie Hebdo\cite{charlie}.
+\item En el 2016 Anonymous atacó los servidores DNS raíz turcos con 40Gbps\cite{varios-2016}. 
+\item En Enero de 2016 un ataque dejó durante tres horas la página web de la BBC y las del candidato Donald Trump con picos de hasta 602Gbps\cite{top-602}.
+\end{itemize}
