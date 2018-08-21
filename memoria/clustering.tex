@@ -199,6 +199,43 @@ SS_W = \sum_{i=1}^{k}\sum_{x\in S_i}d(x, m_i)^2 \nonumber
 
 Para que los clusters estén bien definidos deben tener valores grandes para $SS_B$ (medida de separación) y peque\~nos para $SS_W$ (medida de cohesión). De esta forma el índice de Calinski-Harabasz es una adaptación del método F-test de ANOVA, $SS_B$ con $k-1$ y $SS_W$ con $n-k$ grados de libertad por lo que aparecen en la fórmula pues $SS_B$ debe ser proporcional a $k-1$ y $SS_W$ proporcional a $n-k$.  \\
 
+El método a seguir es el mismo que en el caso del coeficiente silueta, elegir un rango de valores para $k$ y elegir el $k$ que maximice el coeficiente Calinski-Harabasz. \\
+
 Al igual que el coeficiente silueta, es un método que funciona generalmente bien para clusters convexos.
 
 \subsection{Método del codo}
+El método del codo consiste en representar en una gráfica el porcentaje de varianza explicada frente al valor $k$ del número de clusters. De forma visual se identifica el valor de $k$ como aquel que si se a\~nadiese otro cluster no mejora o incrementa apenas la varianza explicada. \\
+
+Cabe mencionar que el método del codo no está ligado únicamente a la varianza explicada y pueden utilizarse otras medidas como por ejemplo en clustering jerárquico la distancia mínima entre clusters en cada iteración. En ese caso las distancias serán peque\~nas hasta que en un punto aumenten considerablemente al fusionar clusters muy distintos. Este último punto será el $k$ óptimo buscado. \\
+
+Este método recibe el nombre por la gráfica característica que se produce al representar una de estas variables frente al número de clusters, como puede verse en \ref{fig_elbow}, donde el $k$ óptimo aparece marcado en rojo. \\
+
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=10cm,height=10cm,keepaspectratio]{figuras/elbow.png}
+\end{center}
+\caption{Método del codo}
+\label{fig_elbow}
+\end{figure}
+
+\subsection{Método Gap}
+El método Gap fue desarrollado por unos investigadores en Stanford\cite{gap:2001}. Este método formaliza matemáticamente el método del codo para encontrar el $k$ óptimo. Dado 
+\begin{equation}
+W_k = \sum_{r=1}^{k}\frac{\displaystyle 1}{\displaystyle 2n_r}D_r \nonumber
+\end{equation}
+donde $D_k$ es la suma de la distancia intra-cluster entre sus elementos. En caso de utilizarse la distancia euclídea, $W_k$ es la suma de los cuadrados de las distancias intra-cluster. \\
+
+La idea es estandarizar el gráfico $\log{(W_k)}$ mediante la comparación de este con su esperanza bajo una distribución nula de referencia. Se define por tanto el estadístico Gap como
+\begin{equation}
+Gap_n(k) = E_n^*\{\log{(W_k)}\} - \log{(W_k)} \nonumber
+\end{equation}
+
+El valor óptimo de $k$ es el mínimo $k$ tal que $Gap(k) \geq Gap(k+1) - s_{k+1}$, donde $s$ es la desviación mínima. En \ref{fig_gap} se muestra la similitud entre el método del codo y el de Gap. \\
+
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=10cm,height=10cm,keepaspectratio]{figuras/gap.png}
+\end{center}
+\caption{Método del codo y método Gap}
+\label{fig_gap}
+\end{figure}
