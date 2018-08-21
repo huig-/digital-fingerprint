@@ -1,4 +1,4 @@
-En este capítulo ... \\
+En este capítulo se describe el clustering y dos métodos principales. También se comentan varios métodos para elegir el número óptimo de clusters. \\
 
 Clustering es una técnica de aprendizaje no supervisado que a partir de un conjunto de datos y una medida de similitud o distancia entre ellos los agrupa en distintas clases o clusters de forma que elementos que están en el mismo clúster son más parecidos entre ellos que con los de otro clúster distinto. \\
 
@@ -127,7 +127,7 @@ Una vez definidas la distancia a utilizar entre cada par de observaciones, se pu
     \begin{equation}
     d(u,v) = \min{(dist(u[i], v[j]))} \nonumber
     \end{equation}
-para todos los puntos $i$ en el cluster $u$ y todos los $j$ en $v$.
+para todos los puntos $i$ en el cluster $u$ y todos los $j$ en $v$. Este algoritmo se centra en la separación entre clusters pero no en la cohesión de los clusters y permite formas geométricas más flexibles que en otros casos.
 \item Método \textit{complete}, también conocido como Algoritmo del punto lejano o Algoritmo de Voor Hees.
     \begin{equation}
     d(u,v) = \max{(dist(u[i], v[j]))} \nonumber
@@ -148,3 +148,57 @@ donde el cluster $u$ está compuesto por los clusters $s$ y $t$.
     \end{equation}
 donde $u$ es el nuevo cluster creado a partir de $s$ y $t$ y $T=|v|+|s|+|t|$. En este caso, a diferencia de K-means, el número de puntos interviene en la fórmula por lo que dados dos pares de clusters cuyos centros están distanciados por igual, el algoritmo de Ward fusionará los de menor cardinalidad.
 \end{itemize}
+
+\section{Elección del número de clusters óptimo}
+Los algoritmos de clustering se utilizan principalmente de dos propósitos distintos según la problemática:
+\begin{itemize}
+\item Se conoce a priori el número de distintas clases en la población y se quieren obtener los cortes en el vector de características de las observaciones para conocer qué características tiene cada clase. Nuevas observaciones podrán ser categorizadas a partir del conocimiento extraído en el clustering.
+\item No se conoce cuántas clases distintas existen en la población y se quiere conocer esto a partir del clustering.
+\end{itemize}
+
+Es en el segundo caso en el que no se tiene información sobre el $k$ a utilizar en el algoritmo K-means o el corte a aplicar en el dendrograma en clustering jerárquico. En lo que sigue se describen distintos métodos basados en heurísticas para determinar el número de clusters óptimo. \\
+
+\subsection{Coeficiente silueta}
+Para cada observación $x$ se tienen dos medidas:
+\begin{itemize}
+\item Cohesión $a(x)$: grado de similitud del elemento respecto del cluster. Se obtiene como la distancia promedio de $x$ a todos los puntos en el mismo cluster. 
+\item Separación $b(x)$: grado de disimilitud del elemento respecto a elementos que han sido identificados en otras clases. La separación más utilizada es la distancia promedio entre $x$ y todos los elementos del cluster más cercano, aunque también se utilizan otras medidas para valorar la separación.
+\end{itemize}
+
+El coeficiente silueta para $x$ se define entonces como
+\begin{equation}
+s(x) = \frac{\displaystyle b(x) - a(x)}{\displaystyle \max{\{a(x), b(x)\}}} \nonumber
+\end{equation}
+
+y para todo el agrupamiento es
+\begin{equation}
+SC = \frac{1}{n}\sum_{x}s(x)
+\end{equation}
+
+donde $n$ es el número de observaciones. \\
+
+Intuitivamente, un agrupamiento bien definido debería corresponderse con que para cada elemento $x$ se tiene que $a(x) << b(x)$, es decir, $x$ está muy cercano respecto de los elementos de su cluster en comparación con los elementos del cluster más cercano. El coeficiente $s(x)$ toma los valores en el rango $\left[ -1, 1\right]$, donde $-1$ corresponde con una mala elección del número de clusters y $1$ indica clusters bien definidos. \\
+
+De esta forma, una de las técnicas que se usa con el coeficiente silueta es elegir un rango de valores para $k$, y elegir $k$ de forma que el coeficiente silueta para el agrupamiento sea máximo.
+
+\subsection{Índice Calinski-Harabasz}
+Dado $k$, se define el índice de Calinski-Harabasz como:
+\begin{equation}
+s(k) = \frac{SS_B}{SS_W} * \frac{N-k}{k-1} \nonumber
+\end{equation}
+$SS_B$ es la varianza entre clusters
+\begin{equation}
+SS_B = \sum_{i=1}^{k}n_id(m_i, m)^2 \nonumber
+\end{equation}
+donde $m_i$ es el centroide del cluster $i$ y $m$ es la media de todas las observaciones.
+
+$SS_W$ es la varianza intra-cluster:
+\begin{equation}
+SS_W = \sum_{i=1}^{k}\sum_{x\in S_i}d(x, m_i)^2 \nonumber
+\end{equation}
+
+Para que los clusters estén bien definidos deben tener valores grandes para $SS_B$ (medida de separación) y peque\~nos para $SS_W$ (medida de cohesión). De esta forma el índice de Calinski-Harabasz es una adaptación del método F-test de ANOVA, $SS_B$ con $k-1$ y $SS_W$ con $n-k$ grados de libertad por lo que aparecen en la fórmula pues $SS_B$ debe ser proporcional a $k-1$ y $SS_W$ proporcional a $n-k$.  \\
+
+Al igual que el coeficiente silueta, es un método que funciona generalmente bien para clusters convexos.
+
+\subsection{Método del codo}

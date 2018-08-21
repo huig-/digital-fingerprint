@@ -12,3 +12,7 @@
 \BOOKMARK [0][-]{chapter.3}{Clustering}{}% 12
 \BOOKMARK [1][-]{section.3.1}{K-means}{chapter.3}% 13
 \BOOKMARK [1][-]{section.3.2}{Clustering jer\341rquico}{chapter.3}% 14
+\BOOKMARK [1][-]{section.3.3}{Elecci\363n del n\372mero de clusters \363ptimo}{chapter.3}% 15
+\BOOKMARK [2][-]{subsection.3.3.1}{Coeficiente silueta}{section.3.3}% 16
+\BOOKMARK [2][-]{subsection.3.3.2}{\315ndice Calinski-Harabasz}{section.3.3}% 17
+\BOOKMARK [2][-]{subsection.3.3.3}{M\351todo del codo}{section.3.3}% 18

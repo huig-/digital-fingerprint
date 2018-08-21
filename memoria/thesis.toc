@@ -14,4 +14,8 @@
 \contentsline {chapter}{\numberline {3}Clustering}{21}{chapter.3}
 \contentsline {section}{\numberline {3.1}K-means}{21}{section.3.1}
 \contentsline {section}{\numberline {3.2}Clustering jer\IeC {\'a}rquico}{24}{section.3.2}
+\contentsline {section}{\numberline {3.3}Elecci\IeC {\'o}n del n\IeC {\'u}mero de clusters \IeC {\'o}ptimo}{27}{section.3.3}
+\contentsline {subsection}{\numberline {3.3.1}Coeficiente silueta}{28}{subsection.3.3.1}
+\contentsline {subsection}{\numberline {3.3.2}\IeC {\'I}ndice Calinski-Harabasz}{29}{subsection.3.3.2}
+\contentsline {subsection}{\numberline {3.3.3}M\IeC {\'e}todo del codo}{29}{subsection.3.3.3}
 \babel@toc {spanish}{}
