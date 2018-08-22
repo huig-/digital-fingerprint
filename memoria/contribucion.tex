@@ -1,0 +1,21 @@
+En este capítulo se presenta la contribución propia, un método de identificación de la fuente de adquisión de vídeos de dispositivos móviles en escenarios abiertos.
+
+\section{Consideraciones generales}
+El algoritmo desarrollado se puede divir en etapas. \\
+
+En primer lugar se extraen los fotogrames de tipo I del vídeo puesto que contienen más información que el resto y de estos se selecciona un subconjunto de ellos basado en el número de frames por segundo, de forma que los fotogramas extraídos representen sin sesgo las diferentes escenas del vídeo, para evitar que frames con la misma escena contaminen el ruido. Para esto último se utiliza \textit{hash perceptual} que mide el grado de similitud entre distintos frames, en detrimento de los histogramas de color pues se consiguen mejores resultados, y se utiliza el algoritmo K-means para seleccionar los $k$ frames más representativos. \\
+
+Una vez se han obtenido los fotogramas clave se extrae el PRNU de cada fotograma mediante el algoritmo desarrollado en \cite{ana:2015} basado en la transformada \textit{wavelet} de Daubechies y se define el sensor de la cámara como la media del ruido extraído de los frames clave. \\
+
+El último paso corresponde con clustering jerárquico utilizando el método Ward puesto que se ha visto en las pruebas que es el que mejor resultado otorga en este contexto. De la misma forma, se ha validado experimentalmente que el método del codo es el que determina con mayor precisión el número de clusters óptimos. \\
+
+\section{Especificación del método}
+En el diagrama de cajas\ref{fig_metodo} se resume el algortimo propuesto, que consta de las siguientes fases:
+\begin{enumerate}
+\item Toma como entrada un conjunto de $n$ vídeos correspondientes a $m$ cámaras de móvil distintas.
+\item Mediante la herramienta \textit{ffprobe} se decodifica cada vídeo y se extraen los I-frames, que al haber sido comprimidos sin referenciar otros fotogramas contienen mayor grado de información que los P-frames o B-frames. 
+\item Se computa el \textit{hash perceptual} entre cada par de I-frames extraídos y se aplica el algoritmo de clustering K-means con el método Gap. De esta forma, se obtienen los I-frames más distintos visualmente, en adelante fotogramas clave,  para no contaminar el ruido en base a escenas muy parecidas.
+\item Se extra el PRNU de cada fotograma clave y se calcula el PRNU del vídeo como la media de los PRNU de los frames clave.
+\item Se computa la correlación entre ruidos y se utiliza como matriz de distancias en un algoritmo de clustering jerárquico aglomerativo.
+\item El número óptimo de clusters se obtiene mediante el método del codo.
+\end{enumerate}
