@@ -1,7 +1,43 @@
 En este capítulo se presentan las principales técnicas forenses aplicadas a vídeos. A pesar de ser un campo ampliamente investigado, la gran cantidad de vídeo que se produce a diario y el crecimiento de aplicaciones de edición de vídeo para usuarios no expertos ha crecido exponencialmente en los últimos a\~nos, lo que hace que muchos de los algoritmos desarrollados queden desactualizados frente a nuevos técnicas antiforenses. 
 La gran digitilización de la sociedad en los últimas décadas ha influido notablemente en procesos judiciales, especialmente posteriormente a $1978$ puesto que tras la legislación deFlorida se admitían pruebas digitales (e-mails, fotografías o vídeos digitales, audios, etc.) como evidencia. Para garantizar que pruebas digitales puedan considerarse como evidencia de sucesos reales tiene que garantizarse que no haya sido manipulada y debe poder establecerse la fuente de adquisión de los datos digitales en cuestión. \\
 
-En las siguientes secciones se describen en detalle la detección de manipulación de vídeos, la detección de doble compresión (un caso concreto que permite la detección de manipulación de vídeos) y la identificación de la fuente.
+En las siguientes secciones se describen en detalle la detección de manipulación de vídeos, la detección de doble compresión (un caso concreto que permite la detección de manipulación de vídeos) y la identificación de la fuente. Antes, sin embargo, es necesario definir cómo se puede medir el grado de similitud entre dos imágenes, puesto que en muchas de las técnicas dentro de manipulación de vídeos, es necesario comparar frames o regiones de frames. \\
+
+\section{Similitud entre fotogramas}
+Detectar cuando dos frames son iguales o muy parecidos es una parte importante del análisis forense en imágenes y vídeos. Además de ser una herramienta muy útil en la detección de inserciones de frames en vídeos u objetos, también lo es para asegurar los derechos de autor. Como se explicará posteriormente, permite también obtener los frames más representativos de un vídeo obteniendo los menos similares, técnica que permite resumir vídeos a través de la indexación y la navegación. En lo que sigue se exponen dos métodos ampliamente utilizados para tratar la similitud entre frames. \\
+
+\subsection{Histogramas de color}
+Este método se basa en que las imágenes o frames se corresponden con una serie de valores de píxel, e imágenes similares tendrán proporciones parecidas de ciertos colores\cite{jain:1996}. Al agrupar en clases y representar las frecuencias, el histograma no se verá afectado al manipular la orientación, tama\~no o posición de la imagen. \\
+
+Técnicas simples como la propuesta en \cite{jain:1996} obtienen un $90\%$ de precisión para detectar imágenes similares en bases de datos. Para cada canal RGB crean un histograma y utilizan la distancia euclídea para comparar cada clase (en inglés \textit{bin}). \\
+
+Se han desarrollado técnicas más elaboradas como la expuesta en \cite{jeong:2001} en la que utilizan un único histograma en lugar de tres, pero cada clase del histograma tiene información que relaciona todos los canales. Además, también realizan pruebas con otras variables distintas al color. Para calcular la similitud entre los histogramas, se utilizaron diferentes métodos como la distancia euclídea o la intersección de histogramas. La frecuencia además fue normalizada en base al número de pixels de cada imagen, para poder abarcar redimensionamiento de imágenes. \\
+
+La principal desventaja que tiene el uso del histograma de color es que no tienen en cuenta características espaciales o geométricas: el mismo objeto cambiado de color no será visto como el mismo. Además, cambios en la cuantificación pueden pasar desapercibidos por algoritmos basados en el histograma de color. \\
+
+\subsection{Perceptual hashing}
+El uso de funciones \textit{hash} o funciones resumen ha sido ampliamente utilizado en criptografía. Estas funciones se han caracterizado por transformar dos entradas muy similares en salidas completamente distintas. Sin embargo, las funciones de tipo \textit{perceptual hashing} obtienen resultados muy similares para imágenes de entrada muy parecidas, de forma que la distancia entre la salida de dos \textit{perceptual hash} puede ser utilizado para comparar dos imágenes. La distancia en este caso a utilizar es la distancia de Hamming, que cuenta el número de bits que difieren.\\
+
+Hay varios algoritmos para calcular el \textit{perceptual hash} de una imagen, aunque todos utilizan pasos similares. A continuación se describen los métodos \textit{average}, \textit{difference} y \textit{phash}. \\
+
+El algoritmo \textit{average hash} consta de:
+\begin{enumerate}
+\item \textbf{Reducir el tama\~no}: se reduce la imagen a una de tama\~no $8$x$8$. De esta forma se reducen elementos de alta frecuencia y los detalles de la imagen.
+\item \textbf{Reducir el color}: se convierte a escala de grises.
+\item \textbf{Calcular el color medio}.
+\item \textbf{Calcular el hash}: se compara cada píxel con el color medio.
+\end{enumerate} 
+
+\textit{Difference hash} sigue los mismos dos primeros pasos que \textit{average hash} pero en vez de comparar el valor del píxel con el color medio lo compara con el píxel situado a su derecha. Genera menos falsos positivos que \textit{average hash}. \\
+
+El más complejo y más costoso computacionalmente es el algoritmo \textit{phash}:
+\begin{enumerate}
+\item \textbf{Reducir el tama\~no}: se reduce la imagen a una de tama\~no $32$x$32$.
+\item \textbf{Obtener la luminosidad}: para cada píxel resultante se obtiene el valor de la luminosidad.
+\item \textbf{Transformada DCT}: se aplica la transformada DCT a la matriz resultante del paso anterior.
+\item \textbf{Bajas frecuencias}: de la matriz de $32$x$32$ obtenida en el paso anterior, se eliminan las altas frecuencias y toma únicamente los $8$x$8$ valores correspondientes con frecuencias bajas, los de más arriba y más a la izquierda.
+\item \textbf{Calcular el hash}: se compara cada píxel con la mediana.
+\end{enumerate}
 
 \section{Manipulación de vídeos}
 Actualmente existen multitud de herramientas de edición de vídeo a disposición de usuarios no expertos, que pueden manipular la imagen de múltiples formas como introduciendo, quitando, repitiendo o copiando frames, además de operaciones que no a\~naden objetos al vídeo como son la rotación, el escalado o la aplicación de filtros. En cualquiera de los dos casos, a pesar de que no haya a\~nadido o eliminado ningún objeto en frames, afectará a la codificación del vídeo. \\
