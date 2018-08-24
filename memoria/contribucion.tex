@@ -3,7 +3,7 @@ En este capítulo se presenta la contribución propia, un método de identificac
 \section{Consideraciones generales}
 El algoritmo desarrollado se puede divir en etapas. \\
 
-En primer lugar se extraen los fotogrames de tipo I del vídeo puesto que contienen más información que el resto y de estos se selecciona un subconjunto de ellos basado en el número de frames por segundo, de forma que los fotogramas extraídos representen sin sesgo las diferentes escenas del vídeo, para evitar que frames con la misma escena contaminen el ruido. Para esto último se utiliza \textit{hash perceptual} que mide el grado de similitud entre distintos frames, en detrimento de los histogramas de color pues se consiguen mejores resultados, y se utiliza el algoritmo K-means para seleccionar los $k$ frames más representativos. \\
+En primer lugar se extraen los fotogrames de tipo I del vídeo puesto que contienen más información que el resto y de estos se selecciona un subconjunto de ellos en base a la similitud entre ellos, de forma que los fotogramas extraídos representen sin sesgo las diferentes escenas del vídeo, para evitar que frames con la misma escena contaminen el ruido. Para esto último se utiliza el algoritmo \textit{phash} que mide el grado de similitud entre distintos frames. \\
 
 Una vez se han obtenido los fotogramas clave se extrae el PRNU de cada fotograma mediante el algoritmo desarrollado en \cite{ana:2015} basado en la transformada \textit{wavelet} de Daubechies y se define el sensor de la cámara como la media del ruido extraído de los frames clave. \\
 
@@ -13,9 +13,51 @@ El último paso corresponde con clustering jerárquico utilizando el método War
 En el diagrama de cajas\ref{fig_metodo} se resume el algortimo propuesto, que consta de las siguientes fases:
 \begin{enumerate}
 \item Toma como entrada un conjunto de $n$ vídeos correspondientes a $m$ cámaras de móvil distintas.
-\item Mediante la herramienta \textit{ffprobe} se decodifica cada vídeo y se extraen los I-frames, que al haber sido comprimidos sin referenciar otros fotogramas contienen mayor grado de información que los P-frames o B-frames. 
-\item Se computa el \textit{hash perceptual} entre cada par de I-frames extraídos y se aplica el algoritmo de clustering K-means con el método Gap. De esta forma, se obtienen los I-frames más distintos visualmente, en adelante fotogramas clave,  para no contaminar el ruido en base a escenas muy parecidas.
-\item Se extra el PRNU de cada fotograma clave y se calcula el PRNU del vídeo como la media de los PRNU de los frames clave.
-\item Se computa la correlación entre ruidos y se utiliza como matriz de distancias en un algoritmo de clustering jerárquico aglomerativo.
-\item El número óptimo de clusters se obtiene mediante el método del codo.
+\item \textbf{Extracción de fotogramas de tipo I}: mediante la herramienta \textit{ffprobe} se decodifica cada vídeo y se extraen los I-frames, que al haber sido comprimidos sin referenciar otros fotogramas contienen mayor grado de información que los P-frames o B-frames. Como se muestra mediante experimentos, el alto nivel de compresión de los fotogramas de tipo P y de tipo B evitan la obtención de una huella significativa a partir de estos por lo que es necesario buscar los fotogramas con menor nivel de compresión en vídeo que son los de tipo I. Aún así, la compresión de los I-frames es bastante alta en comparación a imágenes.
+\item \textbf{Extracción de fotogramas clave}: para no contarminar el ruido con la escena, se deben elegir frames que representen las distintas escenas del vídeo. Para ello en primer lugar se computa el \textit{phash} de cada frame y se construye la matriz de distancias $D(i,j)$ para cada par de frames, utilizando la distancia Hamming. Para seleccionar los más disimilares se define un umbral determinado y el primer I-frame como fotograma clave. Se elijen los demás I-frames de forma que la distancia Hamming entre todos ellos sea mayor al umbral.
+\item \textbf{Extracción del PRNU}: se extrae el PRNU de cada fotograma clave y se calcula el PRNU del vídeo como la media de los PRNU de los frames clave. 
+\item \textbf{Matriz de distancias para clustering jerárquico}: se computa la correlación entre ruidos y se utiliza como matriz de distancias en un algoritmo de clustering jerárquico aglomerativo. Al tratarse de un escenario abierto, no se tiene una base de datos que asocia sensores a ruido PRNU por lo que es necesario agrupar los vídeos de entrada en grupos de forma que cada grupo represente un dispostivo distinto. 
+\item \textbf{Elección del número de clusters óptimo}: el número óptimo de clusters se obtiene mediante el método del codo.
 \end{enumerate}
+
+A continuación se detalla cada uno de los algoritmos utilizados en la propuesta.
+
+\begin{algorithm}
+\caption{Extracción de fotogramas clave}
+\label{alg_keyframes}
+\begin{algorithmic}[1]
+\Statex \textbf{Input} video, secuencia de fotogramas
+\Statex \textbf{Output} fotogramas clave
+\State $iframes \gets extraerIframes(video)$
+\State $hashes \gets phash(iframes)$
+\State $dist \gets matrizDistancias(hashes)$
+\State $umbral \gets 25$ 
+\State $frames\_clave \gets [0]$
+\State $ult \gets 0$ 
+\State $f\_candidatos \gets \{(dist(ult,j), j)\in range(1,N) \; | \; dist(ult, j) > umbral\}$ 
+\While{$f\_candidatos \neq\emptyset$}
+   \State $max\_dist, ult \gets \max({f\_candidatos})$
+   \State $iframes\_clave \gets iframes\_clave \cup \{ult\}$
+   \State $f\_candidatos \gets f\_candidatos - (max\_dist, ult)$
+   \State $f\_candidatos \gets \{(dist(ult,j), j)\in range(1,N) \; | \; dist(ult, j) > umbral\}$ 
+\EndWhile
+\State \textbf{return} $frames\_clave$
+\end{algorithmic}
+\end{algorithm}
+
+El umbral se ha determinado experimentalmente en base a pruebas. Puesto que $phash$ se construye a partir de $64$ píxels se obtiene un $hash$ de $64$ bits, lo que implica que la distancia Hamming máxima entre dos frames es $64$. Se considera por tanto que una diferencia de aproximadamente un $40\%$ es el umbral que identifica cuando son similares o no dos frames. \\
+
+Los frames extraídos mediante \ref{alg_keyframes} representan las distintas escenas de un vídeo. Tras extraer el PRNU de cada uno de estos frames se define el PRNU como la media del ruido de estos, lo que constituye la entrada para el algoritmo de clustering jerárquico. \\
+
+El algoritmo de clustering jerárquico utilizará como distancia la matriz de correlaciones con una transformación. La correlación entre el PRNU $p_1$ y $p_2$ se define como:
+\begin{equation}
+\rho_{p_1,p_2} = \frac{\displaystyle \mathrm{Cov}(p1, p2)}{\displaystyle \sigma_{p1}\sigma_{p2}} \nonumber
+\end{equation}
+
+Se transforma la matriz de correlaciones $\rho$ en una matriz de distancias mediante $1-\rho$ puesto que:
+\begin{itemize}
+\item $1-\rho$ es semipositiva.
+\item En $\rho$ elementos similares toman valores cercanos a $1$, lo que implica que la distancia en ese caso tiene que ser cercana a $0$.
+\item En $\rho$ valores muy distintos toman valores cercanos a $-1$, que son convertidos valores próximos a $2$, distancia máxima en $1-\rho$.
+\item Las otras dos propiedades de la distancia (además de semipositividad) se satisfacen.
+\end{itemize}
