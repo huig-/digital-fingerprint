@@ -10,8 +10,9 @@ def generate_correlation_file(noise_path, results_path):
     filenames = ''
     dirlist = sorted(os.listdir(noise_path))
     nfiles = len(dirlist)
-    r = np.ones((nfiles, nfiles))
+    r = np.ones((nfiles, 49000))
     # Save element's names
+
     for i in range(nfiles):
         next_file = noise_path + '/' + dirlist[i]
         np1 = np.load(next_file).flatten()
@@ -22,7 +23,9 @@ def generate_correlation_file(noise_path, results_path):
                 continue
             np2 = np.load(next_file).flatten()
             r[i, j] = r[j, i] = np.corrcoef(np1, np2)[0, 1]
-    np.save(results_path + '/corr', r)
+
+    np.save(results_path + 'noises', r)
+    #np.save(results_path + '/corr', r)
     filenames = filenames[1:]
     f = open(results_path + '/elements.txt', 'w')
     f.write(filenames)

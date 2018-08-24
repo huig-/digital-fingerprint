@@ -20,7 +20,7 @@ En el diagrama de cajas\ref{fig_metodo} se resume el algortimo propuesto, que co
 \item \textbf{Elección del número de clusters óptimo}: el número óptimo de clusters se obtiene mediante el método del codo.
 \end{enumerate}
 
-A continuación se detalla cada uno de los algoritmos utilizados en la propuesta.
+A continuación se detalla el algoritmo de extracción de fotogramas clave.
 
 \begin{algorithm}
 \caption{Extracción de fotogramas clave}
@@ -31,27 +31,44 @@ A continuación se detalla cada uno de los algoritmos utilizados en la propuesta
 \State $iframes \gets extraerIframes(video)$
 \State $hashes \gets phash(iframes)$
 \State $dist \gets matrizDistancias(hashes)$
-\State $umbral \gets 25$ 
+\State $umbral \gets mediana(dist)$ 
 \State $frames\_clave \gets [0]$
 \State $ult \gets 0$ 
 \State $f\_candidatos \gets \{(dist(ult,j), j)\in range(1,N) \; | \; dist(ult, j) > umbral\}$ 
 \While{$f\_candidatos \neq\emptyset$}
    \State $max\_dist, ult \gets \max({f\_candidatos})$
    \State $iframes\_clave \gets iframes\_clave \cup \{ult\}$
-   \State $f\_candidatos \gets f\_candidatos - (max\_dist, ult)$
-   \State $f\_candidatos \gets \{(dist(ult,j), j)\in range(1,N) \; | \; dist(ult, j) > umbral\}$ 
+   \State $f\_candidatos \gets f\_candidatos \setminus (max\_dist, ult)$
+   \State $f\_candidatos \gets \{(dist(ult,j), j)\in f\_candidatos \; | \; dist(ult, j) > umbral\}$ 
 \EndWhile
 \State \textbf{return} $frames\_clave$
 \end{algorithmic}
 \end{algorithm}
 
-El umbral se ha determinado experimentalmente en base a pruebas. Puesto que $phash$ se construye a partir de $64$ píxels se obtiene un $hash$ de $64$ bits, lo que implica que la distancia Hamming máxima entre dos frames es $64$. Se considera por tanto que una diferencia de aproximadamente un $40\%$ es el umbral que identifica cuando son similares o no dos frames. \\
+La extracción de fotogramas de tipo I se realiza mediante la herramienta \textit{ffprobe} que se compila mediante la herramienta \textit{ffmpeg}. Esta última es una colección de software libre centrada en vídeo con muchas utilidades como pueden ser grabar o decodificar. En cambio \textit{ffprobe} tiene un alcance menor y no requiere tanta carga, por lo que se ha decidido el uso de esta. En concreto, para cada vídeo se aplica el siguiente comando:
 
+\begin{lstlisting}[language=bash, basicstyle=\small, caption=Extracción de I-frames]
+ffprobe -print_format json -loglevel panic -show_frames \
+-select_streams v <input_video> > <output_json>
+\end{lstlisting}
+
+que crea un fichero en formato json en el que para cada fotograma se especifican ciertos parámetros como son:
+\begin{itemize}
+\item \textit{media\_type}: tendrá el valor vídeo en este caso, pues se ha especificado en la opción \textit{-select\_streams} el valor 'v' que indica vídeo.
+\item \textit{width}: el ancho del fotograma.
+\item \textit{height}: el alto del fotograma.
+\item \textit{pict\_type}: tipo de fotograma, toma los valores 'I', 'B' o 'P'. 
+\end{itemize}
+
+El primer fotograma al contener la primera escena siempre formará parte del conjunto de frames clave. Para seleccionar el próximo fotograma clave primero se genera una lista de candidatos con los frames cuya distancia al primer frame es mayor a la mediana. El de distancia máxima se a\~nade al conjunto de frames clave y se repite el proceso de generación de candidatos y elección del máximo con la particularidad de que el conjunto de candidatos de cada de la iteracción $i+1$ se intereseca con el obtenido en la intersección $i$, para evitar seleccionar fotogramas que han sido descartados en iteracciones anteriores puesto que no cumplían la condición de la mediana. \\
+
+El umbral se ha determinado experimentalmente en base a pruebas. El $phash$ se construye a partir de $64$ píxels por lo que se obtiene un $hash$ de $64$ bits, lo que implica que la distancia Hamming máxima entre dos frames es $64$. Se ha buscado un umbral que dependa del vídeo y se ha optado por la mediana. De esta forma, como poco el $50\%$ de los frames quedarían descartados. \\
+ 
 Los frames extraídos mediante \ref{alg_keyframes} representan las distintas escenas de un vídeo. Tras extraer el PRNU de cada uno de estos frames se define el PRNU como la media del ruido de estos, lo que constituye la entrada para el algoritmo de clustering jerárquico. \\
 
 El algoritmo de clustering jerárquico utilizará como distancia la matriz de correlaciones con una transformación. La correlación entre el PRNU $p_1$ y $p_2$ se define como:
 \begin{equation}
-\rho_{p_1,p_2} = \frac{\displaystyle \mathrm{Cov}(p1, p2)}{\displaystyle \sigma_{p1}\sigma_{p2}} \nonumber
+\rho_{p_1,p_2} = \frac{\displaystyle \mathrm{Cov}(p_1, p_2)}{\displaystyle \sigma_{p_1}\sigma_{p_2}} \nonumber
 \end{equation}
 
 Se transforma la matriz de correlaciones $\rho$ en una matriz de distancias mediante $1-\rho$ puesto que:
@@ -61,3 +78,5 @@ Se transforma la matriz de correlaciones $\rho$ en una matriz de distancias medi
 \item En $\rho$ valores muy distintos toman valores cercanos a $-1$, que son convertidos valores próximos a $2$, distancia máxima en $1-\rho$.
 \item Las otras dos propiedades de la distancia (además de semipositividad) se satisfacen.
 \end{itemize}
+
+Para la elección del número de clusters óptimo se utiliza el método del codo puesto que otros indicadores como el coeficiente silueta o el índice de Calinski-Harabasz, que como se puede ver en los experimentos dan peores resultados en este contexto. El inconveniente del método del codo es que requiere de la inspección visual de la gráfica y por consiguiente no puede automatizarse. \\

@@ -41,7 +41,7 @@ def extract_gprnu_frame(frame):
     noise = cropped_frame - 255 * denoise_wavelet(cropped_frame, wavelet='db8', mode='soft', wavelet_levels=4, multichannel=False)
     return noise 
 
-def extract_noise_frames(vid, indexes=None, key_frames=False): #key_frames uses phash
+def extract_noise_frames(vid, indexes=None, key_frames=True): #key_frames uses phash
     frames = cv2.VideoCapture(vid)
     noise_matrix = None
     if indexes is None:
@@ -66,40 +66,38 @@ def extract_noise_frames(vid, indexes=None, key_frames=False): #key_frames uses 
                 current_frame = int(frames.get(cv2.CAP_PROP_POS_FRAMES)) - 1
                 if current_frame in indexes:
                     if key_frames:
-                        hashes.append(imagehash.average_hash(Image.fromarray(frame)))   
+                        hashes.append(imagehash.phash(Image.fromarray(frame)))   
                     noise = extract_noise_frame(frame).flatten()
                     noise_matrix[cnt , :] = noise
                     cnt += 1
             else:
                 break
-    """
+    
     if key_frames:
         n = len(indexes)
         print("len", len(hashes))
-        similarities = np.empty(shape=(n,n))
-        for i in range(n-1):
-            for j in range(i+1, n):
+        d = np.empty(shape=(n,n))
+        for i in range(n):
+            for j in range(n):
                 similarities[i,j] = hashes[i] - hashes[j]
-        x, y = np.triu_indices(n, 1)
-        f_sim = [(i,j, similarities[i,j]) for i,j in list(zip(x,y))]
+        sd = squareform(d)
         ##Get best
-        m = np.mean(similarities[x,y])
-        real_inds = [0]
-        f_sim = [(i,j,k) for (i,j,k) in f_sim if ((i == 0 and k > m) or i!=0)]
-        for _ in range(n):
-            d = [(val,j) for (i,j,val) in f_sim if i in real_inds and j not in real_inds] + [(val,i) for (i,j,val) in f_sim if i not in real_inds and j in real_inds]
-            if len(d) == 0:
+        med = np.mean(sd)
+        key_frames = [0]
+        pos_frames = range(1,n)
+        last_added = 0
+        while True:
+            candidate_frames = [(d[last_added,j], j) for j in pos_frames if d[last_added,j] > med] 
+            pos_frames = [j for j in pos_frames if d[last_added,j] > med]
+            if len(candidate_frames) == 0:
                 break
-            val, j = max(d)
-            if val < m:
-                break
-            real_inds.append(j)
-            f_sim = [(i0,j0,k) for (i0,j0,k) in f_sim if (((i0 == j or j0 == j) and k > m) or (i0 != j and j0 !=j))]
+            last_added = max(candidate_frames)[1]
+            pos_frames.remove(last_added)
+            key_frames.append(last_added)
 
-        noise_matrix = noise_matrix[real_inds, :]
-        print("real_inds", real_inds)
-        print("len", len(real_inds))
-    """
+        noise_matrix = noise_matrix[key_frames, :]
+        print("indexes", indexes)
+        print("real_inds", key_frames)
 
     frames.release()
     cv2.destroyAllWindows()
@@ -149,11 +147,14 @@ if __name__ == "__main__":
     noise_path = cluster_path + '/noise'
     print('Extracting noise from vids..')
     files = [f for f in os.listdir(video_path) if os.path.isfile(os.path.join(video_path, f))]
-    for f in files:
+    rr = np.empty((len(files), 700*700))
+    for i,f in enumerate(files):
         iframes = find_iframes(os.path.join(video_path, f))
-        np.save(os.path.join(noise_path, f), extract_noise_vid(os.path.join(video_path, f), iframes)) 
-    #print("Clustering")
-    #cluster_noise_job(cluster_path)
+        noise = extract_noise_vid(os.path.join(video_path, f), iframes)
+        np.save(os.path.join(noise_path, f), noise)
+        rr[i,:] = noise
+    print("Clustering")
+    cluster_noise_job(cluster_path)
     """
     path = "/Users/Gago/Desktop/Universidad/Master/TFM/Dataset/Video/iphone_8plus/IMG_0545.MOV"
     ids = find_iframes(path)

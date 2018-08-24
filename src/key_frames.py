@@ -1,7 +1,7 @@
 from PIL import Image
 import numpy as np
 import os
-from imagehash import phash
+from imagehash import phash, average_hash, dhash
 from scipy.spatial.distance import squareform
 
 path = "/Users/Gago/Desktop/Universidad/Master/TFM/Dataset/Video/bq_aquaris_e5/120311"
