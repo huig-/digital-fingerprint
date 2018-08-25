@@ -1,0 +1,112 @@
+En este capítulo se describen las pruebas realizadas para identificación de la fuente en vídeos, introduciendo previamente un ejemplo con fotografías que pone de manifiesto el impacto de la compresión en la extracción del PRNU. \\
+
+La tabla \ref{tabla:fotos} muestra el conjunto de cámaras de fotografía utilizado para la extracción del ruido para varios parámetros de compresión distintos. \\
+
+\begin{table}[!htb]
+    \centering
+        \begin{tabular}{|c|c|}
+        \hline
+        \rowcolor[gray]{0.9}\textbf{Cámara} & \textbf{Formato} \\ 
+        \hline
+        Canon 60D & .TIF \\ 
+        \hline
+        Nikon D90 & .TIF \\ 
+        \hline
+        Nikon D7000 & .TIF \\ 
+        \hline
+        Sony A57 & .TIF \\ 
+        \hline
+        \end{tabular}
+    \caption{Cámaras de fotografía}
+    \label{tabla:fotos}
+\end{table}
+
+La tabla \ref{tabla:videos} muestra el conjunto de cámaras móviles que se ha utilizado para generar distintos \textit{datasets} para la identificación de la fuente en vídeo. \\
+
+\begin{table}[!htb]
+    \centering
+        \begin{tabular}{|l|l|c|c|c|}
+        \hline
+        \rowcolor[gray]{0.9}
+        \textbf{Marca} & \textbf{Modelo} & \textbf{Formato} & \textbf{Tama\~no GOP} & \textbf{Número de vídeos disponibles} \\ \hline
+        BQ & Aquaris E5 & .mp4 & - & 10 \\ \hline
+        Samsung & g6 & .mp4 & - & 10 \\ \hline
+        Iphone & 7 & .mov & - & 10 \\ \hline
+        Huawei & y635 l01 & .mp4 & - & 10 \\ \hline
+        Iphone & 8 plus & .mov & - & 8 \\ \hline
+        Nexus & 5 & .mp4 & - & 10 \\ \hline
+        Xiomi & M3 & .mp4 & - & 13 \\ \hline
+        \end{tabular}
+    \caption{Cámaras de vídeo de móviles}
+    \label{tabla:videos}
+\end{table}
+
+\section{Experimento compresión}
+Este experimento pretende poner de manifiesto el impacto de la compresión en la calidad de la huella extraída de las imágenes. Para eso se parte de imágenes en buena calidad en formato .TIF y se transforman a calidad $90$, calidad $85$ y calidad $80$ formato jpeg. En todos los casos se extrae el PRNU de cada una de las imágenes y se aplica clustering jerárquico utilizando el coeficiente silueta para la elección del número óptimo de clusters. \\
+
+Sin modificar la calidad de las imágenes el resultado del clustering se puede ver en \ref{tabla:compresion100}.
+
+\begin{table}[!htb]
+    \centering
+        \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \rowcolor[gray]{0.9}
+        \textbf{Marca y Modelo} & 1 & 2 & 3 & 4 \\ \hline
+        Canon 60D & 35 & 0 & 0 & 0 \\ \hline
+        Nikon D90 & 0 & 1 & 34 & 0 \\ \hline
+        Nikon D7000 & 0 & 35 & 0 & 0 \\ \hline
+        Sony A57 & 0 & 0 & 0 & 35 \\ \hline
+        \end{tabular}
+    \caption{Clustering con imágenes formato .TIF}
+    \label{tabla:compresion100}
+\end{table}
+
+En \ref{tabla:compresion90} están los resultados para las mismas imágenes en formato jpeg calidad $90\%$.
+
+\begin{table}[!htb]
+    \centering
+        \begin{tabular}{|l|c|c|c|c|c|}
+        \hline
+        \rowcolor[gray]{0.9}
+        \textbf{Marca y Modelo} & 1 & 2 & 3 & 4 & 5\\ \hline
+        Canon 60D & 27 & 4 & 3 & 1 & 0 \\ \hline
+        Nikon D90 & 4 & 4 & 26 & 1 & 0 \\ \hline
+        Nikon D7000 & 5 & 4 & 4 & 2 & 20 \\ \hline
+        Sony A57 & 0 & 27 & 4 & 4 & 0 \\ \hline
+        \end{tabular}
+    \caption{Clustering jpeg calidad $90\%$}
+    \label{tabla:compresion90}
+\end{table}
+
+Como se puede observar la compresión al $90\%$ empeora bastante los resultados iniciales, creando clusters no homogéneos y dispersos. Los resultados para calidad $85\%$ y calidad $80\%$ se pueden ver en \ref{tabla:compresion85} y \ref{tabla:compresion80}, respectivamente. Como se puede observar el impacto de la compresión es muy grande.
+
+\begin{table}[!htb]
+    \centering
+        \begin{tabular}{|l|c|c|c|c|c|c|c|c|}
+        \hline
+        \rowcolor[gray]{0.9}
+        \textbf{Marca y Modelo} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 \\ \hline
+        Canon 60D & 24 & 2 & 4 & 1 & 2 & 1 & 1 & 0 \\ \hline
+        Nikon D90 & 2 & 22 & 3 & 1 & 0 & 1 & 4 & 2 \\ \hline
+        Nikon D7000 & 3 & 3 & 6 & 3 & 8 & 1 & 8 & 3 \\ \hline
+        Sony A57 & 3 & 1 & 5 & 5 & 13 & 1 & 7 & 0 \\ \hline
+        \end{tabular}
+    \caption{Clustering jpeg calidad $85\%$}
+    \label{tabla:compresion85}
+\end{table}
+
+\begin{table}[!htb]
+    \centering
+        \begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|}
+        \hline
+        \rowcolor[gray]{0.9}
+        \textbf{Marca y Modelo} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\ \hline
+        Canon 60D & 3 & 6 & 6 & 4 & 3 & 10 & 2 & 1 & 0 & 0 \\ \hline
+        Nikon D90 & 12 & 4 & 2 & 0 & 4 & 2 & 1 & 5 & 0 & 5 \\ \hline
+        Nikon D7000 & 1 & 1 & 0 & 3 & 6 & 13 & 2 & 3 & 5 & 1 \\ \hline
+        Sony A57 & 3 & 0 & 0 & 5 & 13 & 4 & 1 & 6 & 2 & 1 \\ \hline
+        \end{tabular}
+    \caption{Clustering jpeg calidad $85\%$}
+    \label{tabla:compresion85}
+\end{table}
+
