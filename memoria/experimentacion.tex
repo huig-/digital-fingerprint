@@ -30,10 +30,10 @@ La tabla \ref{tabla:videos} muestra el conjunto de cámaras móviles que se ha u
         \rowcolor[gray]{0.9}
         \textbf{Marca} & \textbf{Modelo} & \textbf{Formato} & \textbf{Tama\~no GOP} & \textbf{Número de vídeos disponibles} \\ \hline
         BQ & Aquaris E5 & .mp4 & - & 10 \\ \hline
-        Samsung & g6 & .mp4 & - & 10 \\ \hline
+        Samsung & G6 & .mp4 & - & 10 \\ \hline
         Iphone & 7 & .mov & - & 10 \\ \hline
-        Huawei & y635 l01 & .mp4 & - & 10 \\ \hline
-        Iphone & 8 plus & .mov & - & 8 \\ \hline
+        Huawei & Y635 L01 & .mp4 & - & 10 \\ \hline
+        Iphone & 8 Plus & .mov & - & 8 \\ \hline
         Nexus & 5 & .mp4 & - & 10 \\ \hline
         Xiomi & M3 & .mp4 & - & 13 \\ \hline
         \end{tabular}
@@ -110,3 +110,52 @@ Como se puede observar la compresión al $90\%$ empeora bastante los resultados 
     \label{tabla:compresion85}
 \end{table}
 
+\section{Experimentos clustering de vídeo}
+
+Se han realizado $10$ experimentos con las combinaciones que aparecen en la tabla \ref{tabla:10exp}.
+
+\begin{table}[!htb]
+    \tiny
+    \centering
+        \begin{tabular}{|l|c|c|c|c|c|c|c|}
+        \hline
+        \rowcolor[gray]{0.9}
+        \textbf{Exp.} & \textbf{BQ Aquaris E5} & \textbf{Samsung G6} & \textbf{Iphone 7} & \textbf{Huawei Y635 L01} & \textbf{Iphone 8+} & \textbf{Nexus 5} & \textbf{Xiomi M3} \\ \hline
+        1 & 5 & 5 & 5 & 0 & 4 & 0 & 0 \\ \hline
+        2 & 8 & 8 & 0 & 8 & 7 & 0 & 0 \\ \hline
+        3 & 0 & 0 & 0 & 0 & 5 & 5 & 0 \\ \hline
+        4 & 7 & 7 & 7 & 0 & 7 & 0 & 0 \\ \hline
+        5 & 5 & 5 & 5 & 0 & 5 & 0 & 0 \\ \hline
+        6 & 4 & 4 & 4 & 0 & 3 & 0 & 0 \\ \hline
+        7 & 9 & 9 & 9 & 9 & 8 & 0 & 0 \\ \hline
+        8 & 6 & 6 & 0 & 6 & 5 & 0 & 0 \\ \hline
+        9 & 6 & 6 & 0 & 6 & 6 & 6 & 6 \\ \hline
+        10 & 5 & 5 & 5 & 5 & 5 & 5 & 0 \\ \hline
+        11 & 5 & 5 & 0 & 5 & 0 & 5 & 0 \\ \hline
+        12 & 9 & 9 & 0 & 9 & 0 & 9 & 0 \\ \hline
+        13 & 9 & 9 & 0 & 9 & 0 & 9 & 0 \\ \hline
+        14 & 0 & 5 & 5 & 5 & 0 & 5 & 5 \\ \hline
+        15 & 0 & 5 & 5 & 0 & 0 & 5 & 0 \\ \hline
+        16 & 6 & 6 & 6 & 0 & 5 & 6 & 0 \\ \hline
+        16 & 0 & 0 & 0 & 5 & 5 & 6 & 0 \\ \hline
+        \end{tabular}
+    \caption{Datasets utilizados para identificación en vídeo}
+    \label{tabla:10exp}
+\end{table}
+
+Los resultados se pueden ver en \ref{tabla:resultados}
+
+\begin{table}[!htb]
+    \centering
+        \begin{tabular}{| c | c || c | c || c | c || c | c ||}
+        \hline
+        %\rowcolor[gray]{0.9}
+        \multirow{2}{*}{Exp.} & \multirow{2}{*}{k} & \multicolumn{2}{c||}{Calinski-Harabasz} & \multicolumn{2}{c||}{Coeficiente Silueta} & \multicolumn{2}{c||}{Método del codo} \\ 
+        \cline{3-8}
+          &   & N. Clusters & TPR & N. Clusters & TPR  & N. Clusters & TPR \\ \hline
+        1 & 5 & 2           &  & 2 & 0.75 & 6 & 0.62  \\ \hline 
+        2 & 7 & 2           & 0.28 & 12 & 0.35  & 6 & 0.61 \\ \hline 
+        \end{tabular}
+    \caption{Resultados clustering según distintos métodos}
+    \label{tabla:resultados}
+\end{table}
