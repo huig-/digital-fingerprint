@@ -3,14 +3,14 @@ En este capítulo se presenta la contribución propia, un método de identificac
 \section{Consideraciones generales}
 El algoritmo desarrollado se puede divir en etapas. \\
 
-En primer lugar se extraen los fotogrames de tipo I del vídeo puesto que contienen más información que el resto y de estos se selecciona un subconjunto de ellos en base a la similitud entre ellos, de forma que los fotogramas extraídos representen sin sesgo las diferentes escenas del vídeo, para evitar que frames con la misma escena contaminen el ruido. Para esto último se utiliza el algoritmo \textit{phash} que mide el grado de similitud entre distintos frames. \\
+En primer lugar se extraen los fotogrames de tipo I del vídeo puesto que contienen más información que el resto. Es posible que existan varios I-frames de escenas similares y la escena podría contaminar el ruido imponiendo el peso de la escena sobre la huella extraída de los demás fotogramas, por lo que una opción es seleccionar un subconjunto de los I-frames en base a la similitud entre ellos, de forma que los fotogramas extraídos representen sin sesgo las diferentes escenas del vídeo, para evitar que frames con la misma escena contaminen el ruido. Para esto último se utiliza el algoritmo \textit{phash} que mide el grado de similitud entre distintos frames. \\
 
-Una vez se han obtenido los fotogramas clave se extrae el PRNU de cada fotograma mediante el algoritmo desarrollado en \cite{ana:2015} basado en la transformada \textit{wavelet} de Daubechies y se define el sensor de la cámara como la media del ruido extraído de los frames clave. \\
+Una vez se han obtenido los fotogramas relevantes (ya sean todos los I-frames o los key-frames) se extrae el PRNU de cada fotograma mediante el algoritmo desarrollado en \cite{ana:2015} basado en la transformada \textit{wavelet} de Daubechies y se define el sensor de la cámara como la media del ruido extraído de los frames clave. \\
 
 El último paso corresponde con clustering jerárquico utilizando el método Ward puesto que se ha visto en las pruebas que es el que mejor resultado otorga en este contexto. De la misma forma, se ha validado experimentalmente que el método del codo es el que determina con mayor precisión el número de clusters óptimos. \\
 
 \section{Especificación del método}
-En el diagrama de cajas\ref{fig_metodo} se resume el algortimo propuesto, que consta de las siguientes fases:
+En el diagrama de cajas\ref{fig_metodo} se resume el algoritmo propuesto. En la descripción se incluye la fase de extracción de fotogramas clave como parte del algoritmo a pesar de que experimentalmente los resultados obtenidos con los I-frames son mejores, a modo de conocer los dos distintos algoritmos que se compararán en el siguiente capítulo. \\
 \begin{enumerate}
 \item Toma como entrada un conjunto de $n$ vídeos correspondientes a $m$ cámaras de móvil distintas.
 \item \textbf{Extracción de fotogramas de tipo I}: mediante la herramienta \textit{ffprobe} se decodifica cada vídeo y se extraen los I-frames, que al haber sido comprimidos sin referenciar otros fotogramas contienen mayor grado de información que los P-frames o B-frames. Como se muestra mediante experimentos, el alto nivel de compresión de los fotogramas de tipo P y de tipo B evitan la obtención de una huella significativa a partir de estos por lo que es necesario buscar los fotogramas con menor nivel de compresión en vídeo que son los de tipo I. Aún así, la compresión de los I-frames es bastante alta en comparación a imágenes.

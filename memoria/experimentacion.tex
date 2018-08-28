@@ -1,4 +1,4 @@
-En este capítulo se describen las pruebas realizadas para identificación de la fuente en vídeos, introduciendo previamente un ejemplo con fotografías que pone de manifiesto el impacto de la compresión en la extracción del PRNU. \\
+En este capítulo se describen las pruebas realizadas en relación a la identificación de la fuente en vídeos. En la primera sección se expone mediante un experimento que utiliza imágenes cómo afecta el grado de compresión a la calidad de la huella o PRNU que se extrae. En la siguiente sección se muestran las pruebas que determinan tanto la elección de los I-frames en lugar de los key-frames y también la elección del método del codo sobre otros. \\
 
 La tabla \ref{tabla:fotos} muestra el conjunto de cámaras de fotografía utilizado para la extracción del ruido para varios parámetros de compresión distintos. \\
 
@@ -29,20 +29,20 @@ La tabla \ref{tabla:videos} muestra el conjunto de cámaras móviles que se ha u
         \hline
         \rowcolor[gray]{0.9}
         \textbf{Marca} & \textbf{Modelo} & \textbf{Formato} & \textbf{Tama\~no GOP} & \textbf{Número de vídeos disponibles} \\ \hline
-        BQ & Aquaris E5 & .mp4 & - & 10 \\ \hline
-        Samsung & G6 & .mp4 & - & 10 \\ \hline
-        Iphone & 7 & .mov & - & 10 \\ \hline
-        Huawei & Y635 L01 & .mp4 & - & 10 \\ \hline
-        Iphone & 8 Plus & .mov & - & 8 \\ \hline
-        Nexus & 5 & .mp4 & - & 10 \\ \hline
-        Xiomi & M3 & .mp4 & - & 13 \\ \hline
+        BQ & Aquaris E5 & .mp4 & 30 & 10 \\ \hline
+        Samsung & G6 & .mp4 & 30 & 10 \\ \hline
+        Iphone & 7 & .mov & 30 & 10 \\ \hline
+        Huawei & Y635 L01 & .mp4 & 30 & 10 \\ \hline
+        Iphone & 8 Plus & .mov & 30 & 8 \\ \hline
+        Nexus & 5 & .mp4 & 31 & 10 \\ \hline
+        Xiomi & M3 & .mp4 & 30 & 13 \\ \hline
         \end{tabular}
     \caption{Cámaras de vídeo de móviles}
     \label{tabla:videos}
 \end{table}
 
 \section{Experimento compresión}
-Este experimento pretende poner de manifiesto el impacto de la compresión en la calidad de la huella extraída de las imágenes. Para eso se parte de imágenes en buena calidad en formato .TIF y se transforman a calidad $90$, calidad $85$ y calidad $80$ formato jpeg. En todos los casos se extrae el PRNU de cada una de las imágenes y se aplica clustering jerárquico utilizando el coeficiente silueta para la elección del número óptimo de clusters. \\
+Este experimento pretende poner de manifiesto el impacto de la compresión en la calidad de la huella extraída de las imágenes. Para eso se parte de imágenes en buena calidad en formato .TIF y se transforman a calidad $90$, calidad $85$ y calidad $80$ formato JPEG. En todos los casos se extrae el PRNU de cada una de las imágenes y se aplica clustering jerárquico utilizando el coeficiente silueta para la elección del número óptimo de clusters. \\
 
 Sin modificar la calidad de las imágenes el resultado del clustering se puede ver en \ref{tabla:compresion100}.
 
@@ -61,7 +61,7 @@ Sin modificar la calidad de las imágenes el resultado del clustering se puede v
     \label{tabla:compresion100}
 \end{table}
 
-En \ref{tabla:compresion90} están los resultados para las mismas imágenes en formato jpeg calidad $90\%$.
+En \ref{tabla:compresion90} están los resultados para las mismas imágenes en formato JPEG calidad $90\%$.
 
 \begin{table}[!htb]
     \centering
@@ -74,7 +74,7 @@ En \ref{tabla:compresion90} están los resultados para las mismas imágenes en f
         Nikon D7000 & 5 & 4 & 4 & 2 & 20 \\ \hline
         Sony A57 & 0 & 27 & 4 & 4 & 0 \\ \hline
         \end{tabular}
-    \caption{Clustering jpeg calidad $90\%$}
+    \caption{Clustering JPEG calidad $90\%$}
     \label{tabla:compresion90}
 \end{table}
 
@@ -91,7 +91,7 @@ Como se puede observar la compresión al $90\%$ empeora bastante los resultados 
         Nikon D7000 & 3 & 3 & 6 & 3 & 8 & 1 & 8 & 3 \\ \hline
         Sony A57 & 3 & 1 & 5 & 5 & 13 & 1 & 7 & 0 \\ \hline
         \end{tabular}
-    \caption{Clustering jpeg calidad $85\%$}
+    \caption{Clustering JPEG calidad $85\%$}
     \label{tabla:compresion85}
 \end{table}
 
@@ -106,13 +106,15 @@ Como se puede observar la compresión al $90\%$ empeora bastante los resultados 
         Nikon D7000 & 1 & 1 & 0 & 3 & 6 & 13 & 2 & 3 & 5 & 1 \\ \hline
         Sony A57 & 3 & 0 & 0 & 5 & 13 & 4 & 1 & 6 & 2 & 1 \\ \hline
         \end{tabular}
-    \caption{Clustering jpeg calidad $85\%$}
-    \label{tabla:compresion85}
+    \caption{Clustering JPEG calidad $80\%$}
+    \label{tabla:compresion80}
 \end{table}
 
 \section{Experimentos clustering de vídeo}
 
-Se han realizado $10$ experimentos con las combinaciones que aparecen en la tabla \ref{tabla:10exp}.
+En esta sección se comparan tanto algoritmos de extracción del ruido como métodos de elección del número de clusters. En el primer experimento se asume que el número de clústers óptimo se ha detectado para comparar únicamente la formación de los clusters utilizando I-frames y utilizando key-frames. En el segundo experimento, se comparan tres métodos distintos para la elección del número de clusters. \\
+
+En ambos casos se utilizan $19$ conjuntos de prueba generados con las combinaciones que aparecen en la tabla \ref{tabla:10exp}.
 
 \begin{table}[!htb]
     \tiny
@@ -137,25 +139,88 @@ Se han realizado $10$ experimentos con las combinaciones que aparecen en la tabl
         14 & 0 & 5 & 5 & 5 & 0 & 5 & 5 \\ \hline
         15 & 0 & 5 & 5 & 0 & 0 & 5 & 0 \\ \hline
         16 & 6 & 6 & 6 & 0 & 5 & 6 & 0 \\ \hline
-        16 & 0 & 0 & 0 & 5 & 5 & 6 & 0 \\ \hline
+        17 & 0 & 0 & 0 & 5 & 5 & 6 & 0 \\ \hline
+        18 & 0 & 5 & 6 & 4 & 0 & 3 & 6 \\ \hline
+        19 & 6 & 5 & 0 & 0 & 0 & 3 & 0 \\ \hline
         \end{tabular}
     \caption{Datasets utilizados para identificación en vídeo}
     \label{tabla:10exp}
 \end{table}
 
-Los resultados se pueden ver en \ref{tabla:resultados}
+
+
+\subsection{Experimento 1}
+
+En este experimento se compara el algoritmo de clustering utilizando todos los I-frames frente a utilizando los key-frames. Para ello se mide la tasa de verdados positivos o TPR (del inglés \textit{True Positive Rate}) partiendo de la base de que se sepa de antemano el número de clusters (dispositivos) verdadero. De esta forma, se analiza si los clusters formados a partir de la información extraída de los I-frames se ajusta más o menos a la realidad que con la información de los key-frames en el caso de haber estimado correctamente el número de clusters mediante algún procedimiento. \\
+
+El TPR se calcula como si se tratase de un algoritmo de clasificación y cada cluster una clase, mide la proporción de positivos verdaderos que son catalogados como tales. \\
+
+Los resultados se pueden ver en \ref{tabla:resultados1}.
 
 \begin{table}[!htb]
     \centering
-        \begin{tabular}{| c | c || c | c || c | c || c | c ||}
+        \begin{tabular}{| c | c || c | c | c | c | c | c |}
         \hline
         %\rowcolor[gray]{0.9}
-        \multirow{2}{*}{Exp.} & \multirow{2}{*}{k} & \multicolumn{2}{c||}{Calinski-Harabasz} & \multicolumn{2}{c||}{Coeficiente Silueta} & \multicolumn{2}{c||}{Método del codo} \\ 
-        \cline{3-8}
-          &   & N. Clusters & TPR & N. Clusters & TPR  & N. Clusters & TPR \\ \hline
-        1 & 5 & 2           &  & 2 & 0.75 & 6 & 0.62  \\ \hline 
-        2 & 7 & 2           & 0.28 & 12 & 0.35  & 6 & 0.61 \\ \hline 
+        Experimento & N. Clusters & TPR Key-frames & TPR I-frames \\ \hline
+        1 & 4 & 0.61 & 1 \\ \hline %04_125953      
+        2 & 4 & 0.83 & 1 \\ \hline %05_234354     
+        3 & 2 & 1 & 1 \\ \hline %08_233516
+        4 & 4 & 0.82 & 0.97 \\ \hline %02_212447
+        5 & 4 & 0.6 & 0.9 \\ \hline %04_133011
+        6 & 4 & 0.65 & 1 \\ \hline %04_142032
+        7 & 5 & 0.7 & 0.71 \\ \hline %04_190011
+        8 & 4 & 0.47 & 1 \\ \hline %05_233103
+        9 & 6 & 0.57 & 0.75 \\ \hline %06_001545
+        10 & 6 & 0.73 & 0.97 \\ \hline %06_003633
+        11 & 4 & 0.85 & 0.96 \\ \hline %07_184927
+        12 & 4 & 0.97 & 0.97 \\ \hline %08_182202
+        13 & 4 & 0.94 & 0.97 \\ \hline %08_184121
+        14 & 5 & 0.64 & 0.84 \\ \hline %08_192425
+        15 & 4 & 0.75 & 0.85 \\ \hline %08_195414
+        16 & 5 & 0.59 & 0.9 \\ \hline %08_201051
+        17 & 3 & 1 & 1 \\ \hline %08_204458
+        18 & 5 & 0.66 & 0.88 \\ \hline %28_183254
+        19 & 3 & 0.94 & 1 \\ \hline %30_191004
         \end{tabular}
     \caption{Resultados clustering según distintos métodos}
-    \label{tabla:resultados}
+    \label{tabla:resultados1}
+\end{table}
+
+Como se puede observar, en todos las pruebas la extracción utilizando todos los I-frames por completo y no solamente los key-frames ha dado mejor resultado.
+
+\subsection{Experimento 2}
+
+En este segundo experimento se comparan distintos métodos para obtener el número óptimo de clusters utilizando el algoritmo de extracción del ruido sobre el total de I-frames, puesto que se ha observado en el experimento anterior que daba mejores resultados. En concreto, se compararán el método de Calinski-Harabasz, el coeficiente silueta y el método del codo. \\
+
+En la tabla \ref{tabla:resultados2} se observa como el método del codo es con diferencia el más efectivo de los tres.
+
+\begin{table}[!htb]
+    \centering
+        \begin{tabular}{| c | c || c | c | c | c | c | c |}
+        \hline
+        %\rowcolor[gray]{0.9}
+        Exp. & N. Clusters & Calinski-Harabasz & Coeficiente silueta & Método del codo \\ \hline 
+        1 & 4 & 2 & \textbf{4} & \textbf{4} \\ \hline %04_125953      
+        2 & 4 & 2 & 2 & \textbf{4} \\ \hline %05_234354     
+        3 & 2 & \textbf{2} & \textbf{2} & \textbf{2} \\ \hline %08_233516
+        4 & 4 & 2 & \textbf{4} & \textbf{4} \\ \hline %02_212447
+        5 & 4 & 2 & 6 & 3 \\ \hline %04_133011
+        6 & 4 & 2 & 2 & \textbf{4} \\ \hline %04_142032
+        7 & 5 & 2 & 3 & 6 \\ \hline %04_190011
+        8 & 4 & 2 & 2 & \textbf{4} \\ \hline %05_233103
+        9 & 6 & 2 & 2 & 4 \\ \hline %06_001545
+        10 & 6 & 2 & 3 & \textbf{6} \\ \hline %06_003633
+        11 & 4 & 2 & 2 & 3 \\ \hline %07_184927
+        12 & 4 & 2 & 2 & \textbf{4} \\ \hline %08_182202
+        13 & 4 & 2 & 2 & \textbf{4} \\ \hline %08_184121
+        14 & 5 & 2 & 3 & \textbf{5} \\ \hline %08_192425
+        15 & 4 & 2 & 3 & \textbf{4} \\ \hline %08_195414
+        16 & 5 & 2 & 7 & \textbf{5} \\ \hline %08_201051
+        17 & 3 & 2 & 2 & \textbf{3} \\ \hline %08_204458
+        18 & 5 & 2 & 2 & 4 \\ \hline %28_183254
+        19 & 3 & 2 & 2 & \textbf{3} \\ \hline %30_191004
+        \end{tabular}
+    \caption{Comparación de métodos para la obtención del número óptimo de clusters}
+    \label{tabla:resultados2}
 \end{table}
