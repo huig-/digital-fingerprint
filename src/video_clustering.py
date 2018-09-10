@@ -3,6 +3,7 @@ from PIL import Image
 import imagehash
 
 import os
+from scipy.spatial.distance import squareform
 import numpy as np
 from skimage.restoration import denoise_wavelet
 import matplotlib.pyplot as plt
@@ -41,7 +42,7 @@ def extract_gprnu_frame(frame):
     noise = cropped_frame - 255 * denoise_wavelet(cropped_frame, wavelet='db8', mode='soft', wavelet_levels=4, multichannel=False)
     return noise 
 
-def extract_noise_frames(vid, indexes=None, key_frames=True): #key_frames uses phash
+def extract_noise_frames(vid, indexes=None, key_frames=False): #key_frames uses phash
     frames = cv2.VideoCapture(vid)
     noise_matrix = None
     if indexes is None:
@@ -79,10 +80,10 @@ def extract_noise_frames(vid, indexes=None, key_frames=True): #key_frames uses p
         d = np.empty(shape=(n,n))
         for i in range(n):
             for j in range(n):
-                similarities[i,j] = hashes[i] - hashes[j]
+                d[i,j] = hashes[i] - hashes[j]
         sd = squareform(d)
         ##Get best
-        med = np.mean(sd)
+        med = np.median(sd)
         key_frames = [0]
         pos_frames = range(1,n)
         last_added = 0
@@ -94,10 +95,10 @@ def extract_noise_frames(vid, indexes=None, key_frames=True): #key_frames uses p
             last_added = max(candidate_frames)[1]
             pos_frames.remove(last_added)
             key_frames.append(last_added)
-
-        noise_matrix = noise_matrix[key_frames, :]
+        
         print("indexes", indexes)
         print("real_inds", key_frames)
+        noise_matrix = noise_matrix[key_frames, :]
 
     frames.release()
     cv2.destroyAllWindows()
@@ -153,8 +154,8 @@ if __name__ == "__main__":
         noise = extract_noise_vid(os.path.join(video_path, f), iframes)
         np.save(os.path.join(noise_path, f), noise)
         rr[i,:] = noise
-    print("Clustering")
-    cluster_noise_job(cluster_path)
+    #print("Clustering")
+    #cluster_noise_job(cluster_path)
     """
     path = "/Users/Gago/Desktop/Universidad/Master/TFM/Dataset/Video/iphone_8plus/IMG_0545.MOV"
     ids = find_iframes(path)

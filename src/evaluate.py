@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-cluster=None
+#cluster="20180824_191546"
 with open("cluster.info") as f:
     cluster = f.readlines()[0].strip()
 print("cluster: ", cluster)

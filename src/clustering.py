@@ -24,8 +24,8 @@ def generate_correlation_file(noise_path, results_path):
             np2 = np.load(next_file).flatten()
             r[i, j] = r[j, i] = np.corrcoef(np1, np2)[0, 1]
 
-    np.save(results_path + 'noises', r)
-    #np.save(results_path + '/corr', r)
+    #np.save(results_path + 'noises', r)
+    np.save(results_path + '/corr', r)
     filenames = filenames[1:]
     f = open(results_path + '/elements.txt', 'w')
     f.write(filenames)
@@ -98,7 +98,7 @@ def cluster_noise(results_path, linkage_method):
     f.close()
     r = np.load(results_path + '/corr.npy')
     disimilitude = 1 - r
-    disimilitude = squareform(disimilitude)
+    #disimilitude = squareform(disimilitude)
     Z = linkage(disimilitude, method=linkage_method)
     Z[:, 2] = Z[:, 2]-Z[:, 2].min()
     # Clusters are separated according to Caldelli's paper. This should be changed to allow more mmethods
